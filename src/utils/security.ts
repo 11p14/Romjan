@@ -221,15 +221,9 @@ export function setupSecurityHandlers(
     }
   };
 
-  // 5. Focus Loss / Window Blur (Prevent Snipping Tool background capture)
-  const handleBlur = () => {
-    onPrivacyShieldChange(true);
-  };
-
-  const handleFocus = () => {
-    onPrivacyShieldChange(false);
-  };
-
+  // 5. Focus Loss / Visibility Change
+  // We use document.visibilitychange rather than window.blur so mobile address bar hides, 
+  // devtools, and iframe focus do not falsely blank out the screen.
   const handleVisibilityChange = () => {
     if (document.hidden) {
       onPrivacyShieldChange(true);
@@ -238,12 +232,16 @@ export function setupSecurityHandlers(
     }
   };
 
+  const handlePointerOrFocus = () => {
+    onPrivacyShieldChange(false);
+  };
+
   window.addEventListener('contextmenu', handleContextMenu);
   window.addEventListener('keydown', handleKeyDown);
   window.addEventListener('beforeprint', handleBeforePrint);
   document.addEventListener('copy', handleCopy);
-  window.addEventListener('blur', handleBlur);
-  window.addEventListener('focus', handleFocus);
+  window.addEventListener('focus', handlePointerOrFocus);
+  window.addEventListener('pointerdown', handlePointerOrFocus);
   document.addEventListener('visibilitychange', handleVisibilityChange);
 
   // Return cleanup function
@@ -252,8 +250,8 @@ export function setupSecurityHandlers(
     window.removeEventListener('keydown', handleKeyDown);
     window.removeEventListener('beforeprint', handleBeforePrint);
     document.removeEventListener('copy', handleCopy);
-    window.removeEventListener('blur', handleBlur);
-    window.removeEventListener('focus', handleFocus);
+    window.removeEventListener('focus', handlePointerOrFocus);
+    window.removeEventListener('pointerdown', handlePointerOrFocus);
     document.removeEventListener('visibilitychange', handleVisibilityChange);
   };
 }
